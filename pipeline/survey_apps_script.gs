@@ -23,6 +23,15 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
+    // 도배 방지: 응답자를 구분할 수 없으므로(익명) 전체 접수량으로 제한 — 1분 20건, 하루 300건 넘으면 받지 않음
+    const cache = CacheService.getScriptCache(), props = PropertiesService.getScriptProperties();
+    const now = new Date(), kMin = "m" + Math.floor(now / 60000), today = Utilities.formatDate(now, "Asia/Seoul", "yyyyMMdd");
+    const nMin = Number(cache.get(kMin) || 0);
+    const nDay = props.getProperty("day") === today ? Number(props.getProperty("dayCount") || 0) : 0;
+    if (nMin >= 20 || nDay >= 300) return out({ ok: false, why: "busy" });
+    cache.put(kMin, String(nMin + 1), 120);
+    props.setProperties({ day: today, dayCount: String(nDay + 1) });
+
     const d = JSON.parse((e && e.postData && e.postData.contents) || "{}");
     const score = (v) => (/^[1-5]$/.test(String(v)) ? Number(v) : "");
     if (!score(d.overall)) return out({ ok: false });

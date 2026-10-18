@@ -146,6 +146,16 @@ def ministry_regs():
     return out
 
 
+BOILER = re.compile(r"^\s*안녕하(?:세요|십니까)[?.!]?\s*|질의하신 내용에 대하여 아래와 같이 답변 드립니다\.?\s*|\s*성심성의껏 답변 드리겠습니다\.?|\s*감사합니다\.?\s*$")
+NOTE_ONLY = re.compile(r"유선|전화|통화|링크로 답변|답변(?:을)? 갈음|메일로 (?:답변|회신|안내)")
+
+
+def hollow(a):
+    """인사말을 빼고 나면 내용이 없는 답변: 10자 미만이거나, 60자 미만인데 '유선으로 안내함' 같은 말뿐인 답변"""
+    t = re.sub(r"\s+", "", BOILER.sub("", a))
+    return len(t) < 10 or (len(t) < 60 and bool(NOTE_ONLY.search(t)))
+
+
 def parts(r):
     """근거를 가진 규칙 구성요소: 기본·조건·협약변경·연계·포스텍 시스템 처리 단계"""
     return [r["base"]] + r["checks"] + r["agree"] + r["연계"] + r.get("시스템", [])
@@ -185,6 +195,19 @@ if __name__ == "__main__":
         seen[c["id"]] += 1
         if seen[c["id"]] > 1:
             c["id"] += f"-{seen[c['id']]}"
+    # 게시판 답변의 인사말·맺음말은 사이트에서 뺌(글마다 반복돼 용량만 차지). 수집 원본(data/cases.json)은 그대로
+    for c in cases:
+        if c["출처구분"] != "참고자료":
+            c["답변"] = BOILER.sub("", c["답변"]).strip() or c["답변"]
+    # 내용 없는 답변(빈 답변, '유선으로 답변드렸습니다'뿐인 글)은 사이트에서 뺌 — 검색 상위를 차지해 쓸모 있는 사례를 밀어냄
+    # 사람이 검수한 사례, 쟁점 위키가 인용한 사례, 검색 평가 정답은 남김
+    import wiki
+    keep = set(json.loads((DATA / "case_overrides.json").read_text(encoding="utf-8")))
+    keep |= {i for w in wiki.load() for i in wiki.cites(w)}
+    keep |= {i for x in json.loads((ROOT / "pipeline" / "search_eval.json").read_text(encoding="utf-8"))["queries"] for i in x["ans"]}
+    before = len(cases)
+    cases = [c for c in cases if c["출처구분"] == "참고자료" or c["id"] in keep or not hollow(c["답변"])]
+    print(f"내용 없는 게시판 답변 {before - len(cases)}건 제외")
     for r in rules["rules"]:
         for c in parts(r):
             for g in c["근거"]:

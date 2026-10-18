@@ -13,8 +13,8 @@
       "Bash(git remote *)",
       "Bash(gh repo create postech-research-fund-check *)",
       "Bash(gh repo view *)",
-      "Bash(gh api repos/ojh23postech-max/rnd/pages *)",
-      "Bash(gh api -X POST repos/ojh23postech-max/rnd/pages *)"
+      "Bash(gh api repos/postech-rnd/rnd/pages *)",
+      "Bash(gh api -X POST repos/postech-rnd/rnd/pages *)"
     ]
   }
 }

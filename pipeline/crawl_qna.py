@@ -8,7 +8,7 @@
 - 증분 수집: data/board_state.json에 마지막 글번호와 답변 대기 글을 기록. 요청 간 1.5초 지연.
 사용: python pipeline/crawl_qna.py [--pages N] [--nrf-pages 150] [--nrf-details 1500] [--skip-iris|--skip-nrf]
 """
-import base64, csv, html, json, re, sys, time
+import base64, csv, datetime, html, json, re, sys, time
 from pathlib import Path
 
 import requests
@@ -142,6 +142,8 @@ def crawl(max_pages, state, cases):
                 cases[f"iris-{x['blltSeq']}"] = to_case(board, x, q, a, date, field)
             else:
                 still.append({k: x[k] for k in ("blltSeq", "blbdId", "blltClSe", "blltTl", "frstRegYmd") if k in x})
+        old = (datetime.date.today() - datetime.timedelta(days=180)).strftime("%Y/%m/%d")  # 반년 넘게 답이 없는 글은 더 기다리지 않음
+        still = [x for x in still if x.get("frstRegYmd", "9999") >= old]
         st["maxSeq"], st["pending"] = new_max, still[-300:]  # 답변 대기는 최근 300건만 재확인
         print(f"{board}: 목록 {n}쪽, 신규·재확인 {len(todo)}건, 누적 {sum(c['출처'] == board for c in cases.values())}건")
         STATE.write_text(json.dumps(state, ensure_ascii=False, indent=1), encoding="utf-8")  # 게시판별 중간 저장
