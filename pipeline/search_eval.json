@@ -43,7 +43,7 @@
     {"q": "컨퍼런스 등록비", "t": "비슷한말", "ans": ["nrf-272158", "nrf-254127", "nrf-283141", "nrf-280432", "nrf-273795", "a28fdd40b9", "motie-36ca141094"]},
     {"q": "항공권 취소 위약금", "t": "비슷한말", "ans": ["c8ab951004", "kaia-5099ae2c68", "nrf-245357", "nrf-245128", "nrf-276041", "ag-4950455420ec-16277", "0ac22d81bc", "nrf-273806"]},
     {"q": "법인카드 정산 어떻게 해요", "t": "시스템", "ans": ["rule:payment"]},
-    {"q": "회의비 사전품의", "t": "시스템", "ans": ["rule:meeting"]},
+    {"q": "회의비 집행 등록", "t": "시스템", "ans": ["rule:meeting"]},
     {"q": "전표 결재요청", "t": "시스템", "ans": ["rule:meeting", "rule:overtime", "rule:expert", "rule:analysis", "rule:pc", "rule:material", "rule:software", "rule:paper", "rule:conference", "rule:labops", "rule:payment", "rule:laborFee", "rule:studentPay"]},
     {"q": "권한 이양", "t": "시스템", "ans": ["rule:pi"]},
     {"q": "확약서 등록", "t": "시스템", "ans": ["rule:studentPay"]},
