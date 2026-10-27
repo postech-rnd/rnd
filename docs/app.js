@@ -305,8 +305,7 @@ function renderCases(v = lastV) {
   page = 0; drawCards();
 }
 
-// 낱말별 2글자 조합(한글·영문만, 숫자·기호 제외)과 숫자 토큰
-const wordGrams = (t) => { const g = new Set(); t.replace(/[^가-힣a-zA-Z\s]/g, " ").split(/\s+/).forEach((w) => grams(w).forEach((x) => g.add(x))); return g; };
+// 숫자 토큰
 const nums = (t) => t.match(/\d+(?:[.,]\d+)*%?/g) || [];
 let autoQ = null; // 상세 내용 때문에 자동으로 체크한 질문
 let scopeR = null; // 상세 내용 판정(가운데 판정에 합침)
@@ -315,17 +314,25 @@ let scopeR = null; // 상세 내용 판정(가운데 판정에 합침)
 function scopeVerdict(q, list) {
   let rh = null;
   if (rule) {
-    const f = fields(), qg = wordGrams(q), qn = nums(q);
+    const f = fields(), qn = nums(q), item = rule.항목.replace(/\s+/g, "");
+    // 문장도 받도록 검색과 같은 낱말 나누기(조사·어미 떼기, 비슷한 말)를 씀. 항목 이름에 든 말(회의·식비 등)은 모든 질문에 흔해 뺌
+    const terms = Search.parse(q).filter((t) => !t.alts.some((a) => a.length >= 2 && item.includes(a)));
     // 질문 본문만 비교(괄호 속 보충 설명은 반대 뜻이 섞여 오판정 위험), "없이·아닌" 같은 부정형 질문은 제외
-    // 글자(한글·영문) 조합이 있어야 하고, 숫자는 통째로 같아야 함("0%"가 "70%"에 걸리지 않게)
-    const qs = !qg.size ? [] : rule.questions.filter((x) => {
+    // 낱말의 절반 이상이 맞고('외부 전문가 참석'이 '참석자가 모두 참여연구자' 질문에 걸리지 않게),
+    // 맞은 낱말이 안 맞은 '아는 말'(비슷한 말 사전에 있는 말)보다 많아야 함('법인카드로 결제'가 '개인카드로 결제' 질문에 걸리지 않게)
+    // 숫자는 통째로 같아야 함("0%"가 "70%"에 걸리지 않게). 여러 질문에 걸리면 가장 많이 맞은 질문만
+    const score = (x) => {
       const lab = x.label.replace(/\(.*?\)/g, "");
-      if (/없이|아닌|않|없는/.test(lab)) return false;
+      if (/없이|아닌|않|없는/.test(lab)) return 0;
       const ln = nums(lab);
-      if (qn.some((v) => !ln.includes(v))) return false;
-      const lg = wordGrams(lab); let n = 0; qg.forEach((g) => lg.has(g) && n++);
-      return n >= Math.max(1, Math.ceil(qg.size * 0.6));
-    });
+      if (qn.some((v) => !ln.includes(v))) return 0;
+      const l0 = lab.toLowerCase().replace(/\s+/g, "");
+      const on = terms.filter((t) => t.alts.some((a) => a.length >= 2 && l0.includes(a)));
+      const miss = terms.filter((t) => !on.includes(t) && t.alts.length > 1).length;
+      return on.length > miss && on.length * 2 >= terms.length ? on.length : 0;
+    };
+    const sc = rule.questions.map(score), top = Math.max(0, ...sc);
+    const qs = top ? rule.questions.filter((x, i) => sc[i] === top) : [];
     const hs = qs.flatMap((x) => rule.checks.filter((c) => c.when.some(([k]) => k === x.id) && hit(c.when, { ...f, [x.id]: true })).map((c) => ({ ...c, qid: x.id })));
     if (hs.length) rh = hs.reduce((m, c) => (RANK[c.판정] > RANK[m.판정] ? c : m));
   }
