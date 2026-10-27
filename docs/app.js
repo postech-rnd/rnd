@@ -178,15 +178,9 @@ function run() {
   const hits = rule.checks.filter((c) => hit(c.when, f));
   const ag = agreement(f);
   const all = [...hits.map((h) => h.판정), ...ag.map((a) => a.v)];
-  const v = all.reduce((m, x) => (RANK[x] > RANK[m] ? x : m), "인정");
+  let v = all.reduce((m, x) => (RANK[x] > RANK[m] ? x : m), "인정");
 
   $("#empty").hidden = true; $("#verdict").hidden = false;
-  const seal = $("#seal");
-  if (seal.dataset.v !== v) { seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
-  seal.dataset.v = v; $("#sealText").innerHTML = SEAL[v];
-  $("#what").innerHTML = `<b>${esc(rule.항목)}</b> · ${esc(regLine(f.ministry))}`;
-  $("#vTitle").textContent = lab(v);
-  $("#seal").setAttribute("aria-label", { 인정: "적정", 판단필요: "확인 필요", 불인정: "부적정" }[v]);
 
   // 근거 순서: 산업부는 공통 운영요령 → 혁신법, 그 외 국가R&D는 혁신법 → POSTECH, 민간은 POSTECH 먼저
   const pri = { motie: ["산업기술혁신", "혁신법", "POSTECH"], national: ["혁신법", "NRF", "POSTECH"], private: ["POSTECH"] }[f.track];
@@ -218,11 +212,20 @@ function run() {
     if (e.target.dataset.sg) showLaw(ss[+e.target.dataset.sg].근거);
     if (e.target.id === "moreSys") openDlg(`<h3>${esc(rule.항목)} · 포스텍 시스템에서 처리</h3><ol class="steps">${ss.map((s, i) => step(s, i, true)).join("")}</ol>`);
   };
+  // 사례 분포로 추정한 상세 내용 사유는 근거 조항이 없음
   const row = (x, i) => `<li data-v="${x.v}">${tag(x.v)}<span>${esc(x.t)}</span>
-      <span class="src"><button type="button" data-law="${i}">${esc(cite(x.g[0]))}</button>${x.g.length > 1 ? ` 외 ${x.g.length - 1}건` : ""}</span>
-      ${x.g[0].발췌 ? `<q class="ex">${esc(x.g[0].발췌)}</q>` : ""}</li>`;
+      ${x.g[0] ? `<span class="src"><button type="button" data-law="${i}">${esc(cite(x.g[0]))}</button>${x.g.length > 1 ? ` 외 ${x.g.length - 1}건` : ""}</span>
+      ${x.g[0].발췌 ? `<q class="ex">${esc(x.g[0].발췌)}</q>` : ""}` : ""}</li>`;
   // 화면에 들어가는 만큼만 보이고 나머지는 '더 보기'로 (페이지 스크롤 없음)
   renderCases(v); // 사례 요약(머리 높이)이 정해진 뒤에 사유 칸을 잼
+  // 상세 내용 판정이 더 엄격하면 가운데 판정에도 반영(자동 체크로 이미 반영됐으면 같거나 낮아 건너뜀)
+  if (scopeR && RANK[scopeR.v] > RANK[v]) { v = scopeR.v; items.unshift(scopeR); }
+  const seal = $("#seal");
+  if (seal.dataset.v !== v) { seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
+  seal.dataset.v = v; $("#sealText").innerHTML = SEAL[v];
+  $("#what").innerHTML = `<b>${esc(rule.항목)}</b> · ${esc(regLine(f.ministry))}`;
+  $("#vTitle").textContent = lab(v);
+  $("#seal").setAttribute("aria-label", { 인정: "적정", 판단필요: "확인 필요", 불인정: "부적정" }[v]);
   const ol = $("#reasons");
   ol.classList.remove("tight");
   const fit = () => {
@@ -306,6 +309,7 @@ function renderCases(v = lastV) {
 const wordGrams = (t) => { const g = new Set(); t.replace(/[^가-힣a-zA-Z\s]/g, " ").split(/\s+/).forEach((w) => grams(w).forEach((x) => g.add(x))); return g; };
 const nums = (t) => t.match(/\d+(?:[.,]\d+)*%?/g) || [];
 let autoQ = null; // 상세 내용 때문에 자동으로 체크한 질문
+let scopeR = null; // 상세 내용 판정(가운데 판정에 합침)
 
 // 검색어(상세 범위) 적정 여부: ① 고른 항목의 체크 질문에 걸리면 그 규정 판정 ② 아니면 검색된 사례의 판정 분포(검수·공식 사례 2배 가중)
 function scopeVerdict(q, list) {
@@ -345,12 +349,14 @@ function renderScope(q, list) {
   if (autoQ && autoQ !== rh?.qid) { const old = $(`[data-q="${autoQ}"]`); autoQ = null; if (old?.checked) { old.checked = false; setTimeout(run); } }
   const cb = rh && $(`[data-q="${rh.qid}"]`);
   if (cb && !cb.checked) { cb.checked = true; autoQ = rh.qid; setTimeout(run); }
+  scopeR = null;
   if (!q) { box.hidden = true; return; }
   const v = rh ? rh.판정 : cv;
   const n = list.filter((c) => c.판정 !== "참고").length;
   const dist = W ? `사례 ${n}건: 인정 ${list.filter((c) => c.판정 === "인정").length} · 불인정 ${list.filter((c) => c.판정 === "불인정").length} · 판단필요 ${list.filter((c) => c.판정 === "판단필요").length}` : "판정이 담긴 사례 없음";
   const why = rh ? `규정: ${rh.사유}` : cv ? `${dist} 기준 추정${sure ? "" : "(검수 안 된 자동분류 사례뿐이라 확정하지 않음)"}${soft ? ". 불인정 사례가 많으니 사례의 조건을 확인하세요" : ""}` : "규정·사례로 판단할 근거가 부족해요. 연구지원팀에 문의하세요.";
   const conflict = rh && rh.판정 !== "불인정" && w.불인정 ? ` (사례 중 불인정 있음)` : "";
+  if (v) scopeR = { v, t: `상세 내용 ‘${q}’: ${why}${conflict}`, g: rh ? rh.근거 : [] };
   box.hidden = false; box.dataset.v = v || "참고";
   box.innerHTML = `${v ? tag(v) : tag("참고")}<span class="txt"><b>${esc(v ? lab(v) : "판단 근거 부족")}</b> ${esc(why + conflict)}</span><button type="button" id="scopeMore">근거</button>`;
   $("#scopeMore").onclick = () => openDlg(`<h3>‘${esc(q)}’ 적정 여부${rule ? ` · ${esc(rule.항목)}` : ""}</h3>
