@@ -436,12 +436,13 @@ dialog .x { position: absolute; top: .9rem; right: 1rem; width: 2.2rem; height: 
 .univ { flex: none; display: block; line-height: 0; padding: 3px 2px; } /* 이미지에 자체 여백이 없어 가장자리가 잘려 보이지 않게 함 */
 .univ img { display: block; width: 199px; height: 34px; } /* 원본 크기: 늘리면 흐려짐 */
 .foot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem 3rem; align-items: start; padding: 2rem 3rem; min-height: 9rem; background: #333; color: #fff; font-size: .85rem; }
-.foot h2 { margin: 0 0 .4rem; font-size: 1rem; font-weight: 700; }
+.foot h2 { margin: 0 0 .4rem; font-size: 1rem; line-height: 1.5rem; font-weight: 700; } /* 오른쪽 로고와 같은 줄 높이 */
 .foot p { margin: 0 0 .3rem; }
 .foot a { color: inherit; }
-.foot-side { display: flex; flex-direction: column; align-items: flex-end; gap: 1.2rem; }
-.foot-side img { width: 161px; height: auto; }
+.foot-side { display: flex; flex-direction: column; align-items: flex-end; }
+.foot-side img { width: 161px; height: 1.5rem; margin-bottom: .4rem; object-fit: contain; object-position: right center; } /* 1줄: Address와 같은 높이, 2줄: 주소와 개인정보 링크 */
 @media (max-width: 1080px) {
   .foot { grid-template-columns: minmax(0, 1fr); padding: 1.5rem 1.2rem; }
   .foot-side { align-items: flex-start; }
+  .foot-side img { object-position: left center; }
 }
