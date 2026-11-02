@@ -433,8 +433,8 @@ dialog .x { position: absolute; top: .9rem; right: 1rem; width: 2.2rem; height: 
 }
 
 /* 학교 로고 · 하단 영역 */
-.univ { flex: none; display: block; line-height: 0; }
-.univ img { height: 2.5rem; width: auto; }
+.univ { flex: none; display: block; line-height: 0; padding: 3px 2px; } /* 이미지에 자체 여백이 없어 가장자리가 잘려 보이지 않게 함 */
+.univ img { display: block; width: 199px; height: 34px; } /* 원본 크기: 늘리면 흐려짐 */
 .foot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem 3rem; align-items: start; padding: 2rem 3rem; min-height: 9rem; background: #333; color: #fff; font-size: .85rem; }
 .foot h2 { margin: 0 0 .4rem; font-size: 1rem; font-weight: 700; }
 .foot p { margin: 0 0 .3rem; }
