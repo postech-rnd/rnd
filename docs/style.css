@@ -26,10 +26,11 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
-  margin: 0; height: 100dvh; display: grid; grid-template-rows: auto 1fr;
+  margin: 0;
   background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.5;
-  letter-spacing: -.01em; overflow: hidden; -webkit-font-smoothing: antialiased;
+  letter-spacing: -.01em; -webkit-font-smoothing: antialiased;
 }
+.screen { height: 100dvh; display: grid; grid-template-rows: auto 1fr; overflow: hidden; } /* 작업 화면은 한 화면, 하단 영역은 그 아래 */
 :focus-visible { outline: 3px solid rgba(49, 130, 246, .45); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
@@ -248,7 +249,7 @@ dialog .x { position: absolute; top: .9rem; right: 1rem; width: 2.2rem; height: 
 
 /* 좁은 화면: 세로로 쌓고 스크롤 허용 */
 @media (max-width: 1080px) {
-  body { height: auto; overflow: auto; }
+  .screen { height: auto; overflow: visible; }
   .board { grid-template-columns: 1fr; }
   .panel { overflow: visible; }
   .cards, .reasons, .qs, .law, .agl { overflow: visible; }
@@ -429,4 +430,18 @@ dialog .x { position: absolute; top: .9rem; right: 1rem; width: 2.2rem; height: 
 @media (max-width: 1080px) {
   .survey { grid-template-columns: minmax(0, 1fr); max-height: none; overflow: visible; padding: 1.2rem; }
   .scale span { white-space: normal; text-align: center; }
+}
+
+/* 학교 로고 · 하단 영역 */
+.univ { flex: none; display: block; line-height: 0; }
+.univ img { height: 2.5rem; width: auto; }
+.foot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem 3rem; align-items: start; padding: 2rem 3rem; min-height: 9rem; background: #333; color: #fff; font-size: .85rem; }
+.foot h2 { margin: 0 0 .4rem; font-size: 1rem; font-weight: 700; }
+.foot p { margin: 0 0 .3rem; }
+.foot a { color: inherit; }
+.foot-side { display: flex; flex-direction: column; align-items: flex-end; gap: 1.2rem; }
+.foot-side img { width: 161px; height: auto; }
+@media (max-width: 1080px) {
+  .foot { grid-template-columns: minmax(0, 1fr); padding: 1.5rem 1.2rem; }
+  .foot-side { align-items: flex-start; }
 }
