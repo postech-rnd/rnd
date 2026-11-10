@@ -19,7 +19,7 @@ const SHEET = "응답";
 const DRAW = "추첨"; // 사은품 추첨 응모자(이름·이메일). 응답 탭과 연결하지 않음. 발송 끝나면 탭째 삭제.
 const HEAD = ["날짜", "전반 만족", "이해 쉬움", "업무 도움", "쓴 기능", "구분", "의견"];
 const USED = ["집행 점검", "사례 백과", "검색", "협약변경 안내", "시스템 처리 안내", "쟁점 정리"];
-const ROLES = ["", "교원", "연구원·학생", "행정직원"];
+const ROLES = ["", "교원", "연구원", "학생", "행정직원"];
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -117,12 +117,15 @@ function buildSummary() {
   head("A20:B20");
 
   // 구분
+  // '연구원·학생'은 2026-11 연구원/학생으로 나누기 전 응답
   put("A29", [
     ["구분", "응답 수"],
     ["교원", "=COUNTIF(" + R + "F2:F,A30)"],
-    ["연구원·학생", "=COUNTIF(" + R + "F2:F,A31)"],
-    ["행정직원", "=COUNTIF(" + R + "F2:F,A32)"],
-    ["응답 안 함", "=B3-SUM(B30:B32)"],
+    ["연구원", "=COUNTIF(" + R + "F2:F,A31)"],
+    ["학생", "=COUNTIF(" + R + "F2:F,A32)"],
+    ["연구원·학생(이전)", "=COUNTIF(" + R + "F2:F,\"연구원·학생\")"],
+    ["행정직원", "=COUNTIF(" + R + "F2:F,A34)"],
+    ["응답 안 함", "=B3-SUM(B30:B34)"],
   ]);
   head("A29:B29");
 
@@ -149,5 +152,5 @@ function buildSummary() {
   chart(Charts.ChartType.LINE, "D2:G60", "월별 평균 점수", 2, { vAxis: { minValue: 1, maxValue: 5 }, pointSize: 6 });
   chart(Charts.ChartType.COLUMN, "A12:D17", "점수 분포", 19, {});
   chart(Charts.ChartType.BAR, "A20:B26", "많이 쓴 기능", 36, { legend: { position: "none" } });
-  chart(Charts.ChartType.PIE, "A29:B33", "응답자 구분", 53, { pieHole: 0.4 });
+  chart(Charts.ChartType.PIE, "A29:B35", "응답자 구분", 53, { pieHole: 0.4 });
 }
