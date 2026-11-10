@@ -13,8 +13,10 @@
  *
  * 익명성: Apps Script 웹 앱은 '모든 사용자'로 배포하면 응답자의 계정·IP를 알 수 없다.
  * 시각도 날짜까지만 남기고, 받는 값은 아래 허용 목록으로만 거른다.
+ * 예외: 추첨 응모에 동의한 사람의 이름·이메일만 '추첨' 탭에 따로 쌓는다(만족도 응답 행과 연결 정보 없음).
  */
 const SHEET = "응답";
+const DRAW = "추첨"; // 사은품 추첨 응모자(이름·이메일). 응답 탭과 연결하지 않음. 발송 끝나면 탭째 삭제.
 const HEAD = ["날짜", "전반 만족", "이해 쉬움", "업무 도움", "쓴 기능", "구분", "의견"];
 const USED = ["집행 점검", "사례 백과", "검색", "협약변경 안내", "시스템 처리 안내", "쟁점 정리"];
 const ROLES = ["", "교원", "연구원·학생", "행정직원"];
@@ -46,6 +48,15 @@ function doPost(e) {
     if (sh.getLastRow() === 0) sh.appendRow(HEAD);
     const day = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
     sh.appendRow([day, score(d.overall), score(d.clarity), score(d.useful), used, role, comment]);
+    // 추첨 응모: 동의한 경우만, 응답 행과 연결 없이 별도 탭에. 값이 틀리면 응모만 버리고 만족도 응답은 그대로 둔다.
+    const dr = d.draw || {};
+    const safe = (s) => (/^[=+\-@]/.test(s) ? "'" + s : s);
+    const name = String(dr.name || "").trim(), email = String(dr.email || "").trim();
+    if (dr.agree === true && name && name.length <= 30 && email.length <= 100 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      const dsh = ss.getSheetByName(DRAW) || ss.insertSheet(DRAW);
+      if (dsh.getLastRow() === 0) dsh.appendRow(["날짜", "이름", "이메일", "개인정보 동의"]);
+      dsh.appendRow([day, safe(name), safe(email), "동의"]);
+    }
     if (!ss.getSheetByName(SUMMARY)) buildSummary();
     return out({ ok: true });
   } catch (err) {

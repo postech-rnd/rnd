@@ -1,5 +1,5 @@
 // 익명 만족도 조사: 응답을 Google Apps Script 웹 앱(pipeline/survey_apps_script.gs)으로 보내 시트에 쌓는다.
-// 이름·이메일·접속 정보는 보내지 않는다. 아래 주소는 Apps Script를 '웹 앱'으로 배포한 뒤 받은 /exec 주소.
+// 만족도 응답은 익명. 추첨 응모를 체크·동의한 경우에만 이름·이메일을 draw로 함께 보내고, 시트에선 '추첨' 탭에 따로 쌓인다. 아래 주소는 Apps Script를 '웹 앱'으로 배포한 뒤 받은 /exec 주소.
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbyd2Yutf-E5aahmsX66HkNclVHknI7mQaFCkvzpfMB_Z8famE8L0BQIeeZmuEo-R0T4Cw/exec";
 const $ = (s) => document.querySelector(s);
 const LABELS = ["매우 불만", "불만", "보통", "만족", "매우 만족"];
@@ -16,6 +16,7 @@ document.querySelectorAll(".rate").forEach((fs) => {
 const msg = (t, s = "") => { $("#msg").textContent = t; $("#msg").dataset.s = s; };
 const val = (n) => document.querySelector(`input[name="${n}"]:checked`)?.value || "";
 $("#comment").addEventListener("input", (e) => { $("#cnt").textContent = e.target.value.length; });
+$("#join").addEventListener("change", (e) => { $("#draw").hidden = !e.target.checked; });
 
 let sent = false;
 try { sent = localStorage.getItem(DONE) === "1"; } catch {}
@@ -30,6 +31,15 @@ $("#sv").addEventListener("submit", async (e) => {
     used: [...document.querySelectorAll('input[name="used"]:checked')].map((x) => x.value).join(", "),
     role: val("role"), comment: $("#comment").value.trim().slice(0, 500),
   };
+  if ($("#join").checked) {
+    const name = $("#dname").value.trim(), email = $("#demail").value.trim();
+    $("#dname").setAttribute("aria-invalid", !name);
+    $("#demail").setAttribute("aria-invalid", !email || !$("#demail").checkValidity());
+    if (!name) { msg("추첨 응모용 이름을 적어 주세요.", "bad"); $("#dname").focus(); return; }
+    if (!email || !$("#demail").checkValidity()) { msg("이메일 주소를 확인해 주세요.", "bad"); $("#demail").focus(); return; }
+    if (!$("#dagree").checked) { msg("추첨에 응모하려면 개인정보 수집·이용에 동의해 주세요.", "bad"); return; }
+    body.draw = { name, email, agree: true };
+  }
   $("#send").disabled = true;
   msg("보내는 중…");
   try {
@@ -38,6 +48,7 @@ $("#sv").addEventListener("submit", async (e) => {
     try { localStorage.setItem(DONE, "1"); } catch {}
     $("#sv").reset();
     $("#cnt").textContent = "0";
+    $("#draw").hidden = true;
     msg("고맙습니다. 응답이 접수됐어요.", "ok");
   } catch {
     msg("보내지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.", "bad");

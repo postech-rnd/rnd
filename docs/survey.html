@@ -18,7 +18,7 @@
     <a href="cases.html">사례 백과</a>
     <a href="survey.html" aria-current="page">만족도 조사</a>
   </nav>
-  <p class="notice">이름·이메일·접속 정보는 받지 않습니다. 응답 날짜만 기록됩니다.</p>
+  <p class="notice">만족도 응답은 익명이며 날짜만 기록됩니다. 추첨 응모를 고른 분만 이름·이메일을 따로 받습니다.</p>
 </header>
 
 <main class="sboard">
@@ -64,6 +64,14 @@
         <textarea id="comment" maxlength="500" placeholder="예: 출장비 사례가 더 있으면 좋겠어요"></textarea>
         <span class="whint">이름·연락처·과제번호 등 누구인지 알 수 있는 내용은 적지 마세요. <span id="cnt">0</span>/500</span>
       </label>
+      <div class="chips"><label><input type="checkbox" id="join">추첨 사은품 응모하기 (선택)</label></div>
+      <fieldset class="agree" id="draw" hidden>
+        <legend>사은품 추첨 응모</legend>
+        <label class="field">이름<input id="dname" maxlength="30" autocomplete="name"></label>
+        <label class="field">이메일<input id="demail" type="email" maxlength="100" autocomplete="email" placeholder="name@postech.ac.kr"></label>
+        <span class="whint">수집 항목: 이름, 이메일 · 목적: 추첨 사은품 당첨 안내와 발송 · 보유 기간: 사은품 발송을 마치면 바로 파기 · 동의하지 않으셔도 되며, 그러면 추첨에서만 빠지고 만족도 응답은 그대로 접수됩니다. 응모 정보는 만족도 응답과 따로 보관돼 누가 어떻게 답했는지 연결하지 않습니다.</span>
+        <label class="whint"><input type="checkbox" id="dagree"> 개인정보 수집·이용에 동의합니다 (필수)</label>
+      </fieldset>
       <p class="smsg" id="msg" role="status" aria-live="polite"></p>
       <button type="submit" class="sbtn" id="send">보내기</button>
     </div>
@@ -83,6 +91,6 @@
   </div>
 </footer>
 
-<script src="survey.js?v=20261016b"></script>
+<script src="survey.js?v=20261110a"></script>
 </body>
 </html>
